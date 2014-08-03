@@ -1,3 +1,5 @@
+//This is the origina Quadric Error Metric Mesh simplfier from the /apps/ in vcglib - placed here for reference
+
 // stuff to define the mesh
 #include <vcg/complex/complex.h>
 
@@ -104,7 +106,7 @@ void Usage() {
 // mesh to simplify
 MyMesh mesh;
 
-int main(int argc, char**argv) {
+int main1(int argc, char**argv) {
 	if (argc < 4)
 		Usage();
 
