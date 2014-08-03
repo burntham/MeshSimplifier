@@ -23,7 +23,7 @@ struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType, Use<MyEdge>::A
 //class MyVertex: public Vertex<MyUsedTypes, vertex::VFAdj, vertex>
 //{}
 
-int main()
+int main2()
 {
 	using namespace std;
 	std::cout<<"Hello World!"<<"\n";

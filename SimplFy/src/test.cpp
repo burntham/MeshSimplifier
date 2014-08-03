@@ -104,7 +104,7 @@ void Usage() {
 // mesh to simplify
 MyMesh mesh;
 
-int main1(int argc, char**argv) {
+int main(int argc, char**argv) {
 	if (argc < 4)
 		Usage();
 
