@@ -20,8 +20,8 @@ class MyFace;
 struct MyUsedTypes: public UsedTypes<Use<MyVertex>::AsVertexType, Use<MyEdge>::AsEdgeType,
 		Use<MyFace>::AsFaceType>{};
 
-class MyVertex: public Vertex<MyUsedTypes, vertex::VFAdj, vertex>
-
+//class MyVertex: public Vertex<MyUsedTypes, vertex::VFAdj, vertex>
+//{}
 
 int main()
 {
@@ -29,3 +29,4 @@ int main()
 	std::cout<<"Hello World!"<<"\n";
 	return 5;
 }
+
