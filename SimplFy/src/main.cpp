@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "simplifier/quadricdecimator.h"
+#include "simplifier/clustering.h"
 #include "simplifier/mesh_properties.h"
 #include "file_handler.h"
 
@@ -19,26 +20,37 @@ using namespace std;
 using namespace brndan022;
 using namespace vcg;
 
+
+
+
 int main(int argc, char**argv)
 {
-	if(argc<3)
+	if(argc<4)
 	{
-		std::cout<<"Invalid arguments have been entered"<<std::endl;
+		printf("Invalid arguments have been entered\n"
+				"Usage: simplify [method] filein.ply fileout.ply [opt]");
 		exit(-1);
 	}
 
-	//Test case!
-	MyMesh m;
+	MyMesh Mesh;
+	Simplifier<MyMesh> *s;
 
-	readFile<MyMesh>(m,argv[1]);
+	if(atoi(argv[1])==0)
+		s=new QuadricDecimator<MyMesh>();
+	else
+		s = new ClusteringDecimator<MyMesh>();
 
-	Simplifier<MyMesh> *s = new QuadricDecimator<MyMesh> ();
+
+	readFile<MyMesh>(Mesh,argv[2]);
+
+
 	s->setParameters(argc, argv);
-	s->simplify(m);
+	s->simplify(Mesh);
 
-	writeMesh(m,argv[2]);
 
-	cout<<"Successful run!"<<endl;
+	writeMesh(Mesh,argv[3]);
+
+	printf("Successful run!");
 	return 0;
 }
 

@@ -16,13 +16,19 @@
 
 namespace brndan022 {
 using namespace vcg;
-	template <typename M> class QuadricDecimator : public Simplifier<M> {
+using namespace tri;
+
+float TargetError =std::numeric_limits<float>::max();
+
+template <typename M> class QuadricDecimator : public Simplifier<M> {
 	private:
 		TriEdgeCollapseQuadricParameter qparams;
-		float TargetError=std::numeric_limits<float>::max();
-		bool CleaningFlag = false;
+		bool CleaningFlag;
 		int FinalSize;
 
+		/*
+		 * Define class for simplifier object
+		 */
 		class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric<MyMesh,
 						VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex> > {
 				public:
@@ -35,10 +41,14 @@ using namespace vcg;
 
 	public:
 		QuadricDecimator(){
-
+			CleaningFlag = false;
+			FinalSize=0;
 		};
 
-		void simplify(M &mesh) override
+		/*
+		 * Execute simplification
+		 */
+		virtual void simplify(M &mesh) override
 		{
 			if (CleaningFlag) {
 					int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
@@ -51,7 +61,7 @@ using namespace vcg;
 
 				vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
 
-				// decimator initialization
+				// decimator initialization (Simplifeier object)
 				vcg::LocalOptimization<MyMesh> DeciSession(mesh, &qparams);
 
 				int t1 = clock();
@@ -75,11 +85,14 @@ using namespace vcg;
 
 		};
 
-		void setParameters(int argc, char ** argv) override
+		/*
+		 * Configure the parameters of the simplifier
+		 */
+		virtual void setParameters(int argc, char ** argv) override
 		{
-			FinalSize=atoi(argv[3]);
+			FinalSize=atoi(argv[4]);
 
-			std::cout<<"Quadric parameters called"<<std::endl;
+			std::cout<<"Quadric configuring"<<std::endl;
 				qparams.QualityThr = .3;
 				float TargetError = std::numeric_limits<float>::max();
 				bool CleaningFlag = false;

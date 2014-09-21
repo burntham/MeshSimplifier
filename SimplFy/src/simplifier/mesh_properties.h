@@ -20,7 +20,8 @@ namespace brndan022
 			vcg::vertex::Coord3f,
 			vcg::vertex::Normal3f,
 			vcg::vertex::Mark,
-			vcg::vertex::BitFlags >
+			vcg::vertex::BitFlags,
+			vcg::vertex::Color4b/*Needed for clustering*/>
 		{
 			public:
 				vcg::math::Quadric<double> & Qd() {return q;}
@@ -35,10 +36,10 @@ namespace brndan022
 		class MyFace : public vcg::Face<MyUsedTypes,
 			vcg::face::VFAdj,
 			vcg::face::VertexRef,
+			vcg::face::Normal3f,
 			vcg::face::BitFlags >{};
 
 		//my mesh class:
 		class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
-
 }
 #endif
