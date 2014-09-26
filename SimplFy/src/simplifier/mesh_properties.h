@@ -20,7 +20,7 @@ namespace brndan022
 			vcg::vertex::Coord3f,
             vcg::vertex::Normal3f,
 			vcg::vertex::Mark,
-			vcg::vertex::BitFlags,
+            vcg::vertex::BitFlags,
             vcg::vertex::Color4b >
 		{
 			public:
@@ -37,7 +37,8 @@ namespace brndan022
 			vcg::face::VFAdj,
 			vcg::face::VertexRef,
             vcg::face::Normal3f,
-            vcg::face::BitFlags >{};
+            vcg::face::BitFlags,
+            vcg::face::Color4b >{};
 
 		//my mesh class:
 		class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};

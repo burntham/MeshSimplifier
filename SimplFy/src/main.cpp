@@ -25,7 +25,8 @@ int main(int argc, char**argv)
 	if(argc<4)
 	{
 		printf("Invalid arguments have been entered\n"
-				"Usage: simplify [method] filein.ply fileout.ply [opt]");
+                "Usage: simplify [method] filein.ply fileout.ply [opt]\n"
+                "[method] can be 0 or 1\n \t-0 for Quadric edge colapse \n\t-1 for Clustering ");
 		exit(-1);
 	}
 

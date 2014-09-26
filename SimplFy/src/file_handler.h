@@ -22,7 +22,7 @@ int mask=0;
 
         int err=vcg::tri::io::Importer<MeshType>::Open(m,filePath,mask);
 
-        printf("mesh loaded with %d vertices and %d faces \n",mesh.vn,mesh.fn);
+        printf("mesh loaded with %d vertices and %d faces \n",m.vn,m.fn);
 
 		if (err)
 		{
