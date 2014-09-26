@@ -21,3 +21,8 @@
 *.app
 SimplFy/libs/vcglib/
 build-SimpleFy-Desktop_Qt_5_3_MSVC2010_OpenGL_32bit-Debug/
+*.ply
+Build/
+SimplFy/src/main.cpp.autosave
+build-SimpleFy-Desktop_Qt_5_3_MSVC2013_64bit-Debug/
+build-SimpleFy-Desktop_Qt_5_3_MSVC2013_64bit-Release/

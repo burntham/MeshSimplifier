@@ -14,11 +14,15 @@
 
 namespace brndan022
 {
+int mask=0;
+
 	template <typename MeshType> int readFile(MeshType &m, char * filePath)
 	{
 		printf("Attempted to read Mesh%s: \n ",filePath);
 
-		int err=vcg::tri::io::Importer<MeshType>::Open(m,filePath);
+        int err=vcg::tri::io::Importer<MeshType>::Open(m,filePath,mask);
+
+        printf("mesh loaded with %d vertices and %d faces \n",mesh.vn,mesh.fn);
 
 		if (err)
 		{
@@ -33,7 +37,7 @@ namespace brndan022
 	template <typename MeshType> int writeMesh(MeshType &m, char * outfilePath)
 	{
 		printf("Writing simplified mesh to %s\n", outfilePath);
-		vcg::tri::io::ExporterPLY<MeshType>::Save(m,outfilePath);
+        vcg::tri::io::ExporterPLY<MeshType>::Save(m,outfilePath,mask);
 		return 0;
 	}
 }

@@ -36,9 +36,21 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
 							MyTriEdgeCollapse, QInfoStandard<MyVertex> > TECQ;
 					typedef MyMesh::VertexType::EdgeType EdgeType;
 					inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){};
+
+                    //Work in progress
+                    void preserveBounding()
+                    {
+                            WV().clear();
+                            for(pf=m.face.begin();pf!=m.face.end();++pf)
+                            if( !(*pf).IsD() && (*pf).IsW() )
+                              for(int j=0;j<3;++j)
+                                if((*pf).IsB(j))
+                                {
+                                  if((*pf).V(j)->IsW())  {(*pf).V(j)->ClearW(); WV().push_back((*pf).V(j));}
+                                  if((*pf).V1(j)->IsW()) {(*pf).V1(j)->ClearW();WV().push_back((*pf).V1(j));}
+                                }
+                    }
 				};
-
-
 	public:
 		QuadricDecimator(){
 			CleaningFlag = false;

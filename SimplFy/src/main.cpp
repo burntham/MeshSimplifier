@@ -20,9 +20,6 @@ using namespace std;
 using namespace brndan022;
 using namespace vcg;
 
-
-
-
 int main(int argc, char**argv)
 {
 	if(argc<4)
@@ -35,23 +32,18 @@ int main(int argc, char**argv)
 	MyMesh Mesh;
 	Simplifier<MyMesh> *s;
 
-	if(atoi(argv[1])==0)
+    if(atoi(argv[1])==0)
 		s=new QuadricDecimator<MyMesh>();
-	else
-		s = new ClusteringDecimator<MyMesh>();
-
+    else
+        s = new ClusteringDecimator<MyMesh>();
 
 	readFile<MyMesh>(Mesh,argv[2]);
 
-
-	s->setParameters(argc, argv);
-	s->simplify(Mesh);
-
+    s->setParameters(argc, argv);
+    s->simplify(Mesh);
 
 	writeMesh(Mesh,argv[3]);
 
 	printf("Successful run!");
 	return 0;
 }
-
-
