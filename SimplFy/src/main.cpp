@@ -22,28 +22,31 @@ using namespace vcg;
 
 int main(int argc, char**argv)
 {
-	if(argc<4)
-	{
-		printf("Invalid arguments have been entered\n"
-                "Usage: simplify [method] filein.ply fileout.ply [opt]\n"
-                "[method] can be 0 or 1\n \t-0 for Quadric edge colapse \n\t-1 for Clustering ");
-		exit(-1);
-	}
+    if(argc<4)
+    {
+        printf("Invalid arguments have been entered\n"
+                "Usage: simplify [method] filein.ply fileout.ply [opt/s]\n"
+                "[method] can be 0 or 1\n "
+                    "\t-0 for Quadric edge colapse \n"
+                    "\t-1 for Clustering\n "
+               );
+        exit(-1);
+    }
 
 	MyMesh Mesh;
 	Simplifier<MyMesh> *s;
 
     if(atoi(argv[1])==0)
-		s=new QuadricDecimator<MyMesh>();
+        s=new QuadricDecimator<MyMesh>();
     else
         s = new ClusteringDecimator<MyMesh>();
 
-	readFile<MyMesh>(Mesh,argv[2]);
+    readFile<MyMesh>(Mesh,argv[2]);
 
     s->setParameters(argc, argv);
     s->simplify(Mesh);
 
-	writeMesh(Mesh,argv[3]);
+    writeMesh(Mesh,argv[3]);
 
 	printf("Successful run!");
 	return 0;
