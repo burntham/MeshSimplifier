@@ -25,6 +25,7 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
 		TriEdgeCollapseQuadricParameter qparams;
 		bool CleaningFlag;
 		int FinalSize;
+        Box3<float> t;
 
 		/*
 		 * Define class for simplifier object
@@ -37,48 +38,49 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
             {
             public:
                 typedef MyMesh MeshType;
-                static void FaceBorderFromVF(MeshType &m)
+
+                static void PEW(MeshType &m)
                 {
 
                   RequirePerFaceFlags(m);
                   RequireVFAdjacency(m);
-
-                  /*
-                   * Remove all borderflags from faces
-                   * For each vertex
-                   *    if !deleted
-                   *        for each face the vertex is connected to:
-                   *            Reset visited value of
-                   *
-                   * */
-
-
                   FaceClearB(m);
+
                   int visitedBit=VertexType::NewBitFlag();
 
                   const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
 
-                  Point3<float> max = m.bbox.max;
-                  Point3<float> min =m.bbox.min;
-                  float test = (max.Z()-min.Z())/2;
-
+//                  printf("\nmaxY:%f minY:%f maxX:%f minX%f maxZ:%f minZ:%f\n", m.bbox.max.Y(), m.bbox.min.Y(), m.bbox.max.X(), m.bbox.min.X(), m.bbox.max.Z(), m.bbox.min.Z());
+//                  printf("\n%f\n", (m.bbox.max.Y()-threshold));
                   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-                    if(!(*vi).IsD())
+                  {
+                    if((!(*vi).IsD()) && (*vi).P().X()>0)
                     {
-                        if((*vi).cP().Z()>=test)
-                        {
-                            for (face::VFIterator<MyFace> vfi(&*vi); !vfi.End(); ++vfi)
-                            {
-                                vfi.f->Flags() |=BORDERFLAG[vfi.z];
-                                vfi.f->Flags() |=BORDERFLAG[(vfi.z+2)%3];
-                            }
-                        }
 
-
+                        Point3f j= (*vi).P();
+                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+                                    {
+                                      vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
+                                      vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
+                                    }
+                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+                                    {
+                                      if(vfi.f->V1(vfi.z)->IsUserBit(visitedBit))  vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
+                                      else vfi.f->V1(vfi.z)->SetUserBit(visitedBit);
+                                      if(vfi.f->V2(vfi.z)->IsUserBit(visitedBit))  vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
+                                      else vfi.f->V2(vfi.z)->SetUserBit(visitedBit);
+                                    }
+                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+                                    {
+                                      if(vfi.f->V(vfi.z)< vfi.f->V1(vfi.z)  &&  vfi.f->V1(vfi.z)->IsUserBit(visitedBit))
+                                        vfi.f->Flags() |= BORDERFLAG[vfi.z];
+                                      if(vfi.f->V(vfi.z)< vfi.f->V2(vfi.z)  &&  vfi.f->V2(vfi.z)->IsUserBit(visitedBit))
+                                        vfi.f->Flags() |= BORDERFLAG[(vfi.z+2)%3];
+                                    }
                     }
-                  VertexType::DeleteBitFlag(visitedBit);
+                      VertexType::DeleteBitFlag(visitedBit);
                 }
-
+}
             };
 
 					typedef vcg::tri::TriEdgeCollapseQuadric<MyMesh, VertexPair,
@@ -100,7 +102,8 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
                     pp->CosineThr=cos(pp->NormalThrRad);
 
                     vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-                    ModFlag::FaceBorderFromVF(m);
+                    ModFlag::PEW(m);
+//                      vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
 
                     if(pp->FastPreserveBoundary)
                       {
