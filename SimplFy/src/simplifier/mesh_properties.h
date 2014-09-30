@@ -41,6 +41,9 @@ namespace brndan022
             vcg::face::Color4b >{};
 
 		//my mesh class:
-		class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {};
+        class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {
+        public:
+            int bn;
+        };
 }
 #endif
