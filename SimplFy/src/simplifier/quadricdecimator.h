@@ -49,34 +49,12 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
                   int visitedBit=VertexType::NewBitFlag();
 
                   const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
-
-//                  printf("\nmaxY:%f minY:%f maxX:%f minX%f maxZ:%f minZ:%f\n", m.bbox.max.Y(), m.bbox.min.Y(), m.bbox.max.X(), m.bbox.min.X(), m.bbox.max.Z(), m.bbox.min.Z());
-//                  printf("\n%f\n", (m.bbox.max.Y()-threshold));
                   for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
                   {
                     if((!(*vi).IsD()) && (*vi).P().X()>0)
                     {
 
-                        Point3f j= (*vi).P();
-                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
-                                    {
-                                      vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
-                                      vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
-                                    }
-                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
-                                    {
-                                      if(vfi.f->V1(vfi.z)->IsUserBit(visitedBit))  vfi.f->V1(vfi.z)->ClearUserBit(visitedBit);
-                                      else vfi.f->V1(vfi.z)->SetUserBit(visitedBit);
-                                      if(vfi.f->V2(vfi.z)->IsUserBit(visitedBit))  vfi.f->V2(vfi.z)->ClearUserBit(visitedBit);
-                                      else vfi.f->V2(vfi.z)->SetUserBit(visitedBit);
-                                    }
-                                    for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
-                                    {
-                                      if(vfi.f->V(vfi.z)< vfi.f->V1(vfi.z)  &&  vfi.f->V1(vfi.z)->IsUserBit(visitedBit))
-                                        vfi.f->Flags() |= BORDERFLAG[vfi.z];
-                                      if(vfi.f->V(vfi.z)< vfi.f->V2(vfi.z)  &&  vfi.f->V2(vfi.z)->IsUserBit(visitedBit))
-                                        vfi.f->Flags() |= BORDERFLAG[(vfi.z+2)%3];
-                                    }
+
                     }
                       VertexType::DeleteBitFlag(visitedBit);
                 }
@@ -102,8 +80,8 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
                     pp->CosineThr=cos(pp->NormalThrRad);
 
                     vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-                    ModFlag::PEW(m);
-//                      vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+                    //ModFlag::PEW(m);
+                      vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
 
                     if(pp->FastPreserveBoundary)
                       {
@@ -177,64 +155,12 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
                                       }
                         }
                   }
-//                    static void Init( TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
-//                      {
-//                        std::cout<<"MODIFIED INIT CALLED INSTEAD!"<<std::endl;
-//                        QParameter *pp=(QParameter *)_pp;
-
-//                      typename 	TriMeshType::VertexIterator  vi;
-//                      typename 	TriMeshType::FaceIterator  pf;
-
-//                      pp->CosineThr=cos(pp->NormalThrRad);
-
-//                      vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-//                      ModFlag::FaceBorderFromVF(m);
-
-//                      if(pp->PreserveBoundary)
-//                        {
-//                          WV().clear();
-//                          for(pf=m.face.begin();pf!=m.face.end();++pf)
-//                          if( !(*pf).IsD() && (*pf).IsW() )
-//                            for(int j=0;j<3;++j)
-//                              if((*pf).IsB(j))
-//                              {
-//                                if((*pf).V(j)->IsW())  {(*pf).V(j)->ClearW(); WV().push_back((*pf).V(j));}
-//                                if((*pf).V1(j)->IsW()) {(*pf).V1(j)->ClearW();WV().push_back((*pf).V1(j));}
-//                              }
-//                          }
-
-//                        InitQuadric(m,pp);
-
-//                      // Initialize the heap with all the possible collapses
-//                          for(vi=m.vert.begin();vi!=m.vert.end();++vi)
-//                            if(!(*vi).IsD() && (*vi).IsRW())
-//                                {
-//                                    vcg::face::VFIterator<FaceType> x;
-//                                    for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
-//                                      x.V1()->ClearV();
-//                                      x.V2()->ClearV();
-//                                    }
-//                                    for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++x )
-//                                    {
-//                                      assert(x.F()->V(x.I())==&(*vi));
-//                                      if((x.V0()<x.V1()) && x.V1()->IsRW() && !x.V1()->IsV()){
-//                                            x.V1()->SetV();
-//                                            h_ret.push_back(HeapElem(new MYTYPE(VertexPair(x.V0(),x.V1()),TriEdgeCollapse< TriMeshType,VertexPair,MYTYPE>::GlobalMark(),_pp )));
-//                                            }
-//                                      if((x.V0()<x.V2()) && x.V2()->IsRW()&& !x.V2()->IsV()){
-//                                            x.V2()->SetV();
-//                                            h_ret.push_back(HeapElem(new MYTYPE(VertexPair(x.V0(),x.V2()),TriEdgeCollapse< TriMeshType,VertexPair,MYTYPE>::GlobalMark(),_pp )));
-//                                          }
-//                                    }
-//                                }
-
-//                    }
                 };
 	public:
 		QuadricDecimator(){
 			CleaningFlag = false;
 			FinalSize=0;
-		};
+        }
 
 
         /*
@@ -246,8 +172,8 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
 
             std::cout<<"Quadric configuring"<<std::endl;
                 qparams.QualityThr = .3;
-                float TargetError = std::numeric_limits<float>::max();
-                bool CleaningFlag = false;
+                TargetError = std::numeric_limits<float>::max();
+                CleaningFlag = false;
                 // parse command line.
                 for (int i = 4; i < argc;) {
                     if (argv[i][0] == '-')
@@ -372,6 +298,13 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
 						&& DeciSession.currMetric < TargetError)
 					printf("Current Mesh size %7i heap sz %9i err %9g \r", mesh.fn,
 							int(DeciSession.h.size()), DeciSession.currMetric);
+
+                if (CleaningFlag) {
+                        int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
+                        int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
+                        printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",
+                                dup, unref);
+                    }
 
 				int t3 = clock();
 				printf("mesh  %d %d Error %g \n", mesh.vn, mesh.fn, DeciSession.currMetric);
