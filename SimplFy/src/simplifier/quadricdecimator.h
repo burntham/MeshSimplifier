@@ -50,25 +50,48 @@ private:
                 RequireVFAdjacency(m);
                 FaceClearB(m);
 
-                int visitedBit=VertexType::NewBitFlag();
+//                int visitedBit=VertexType::NewBitFlag();
 
                 const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
-                for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-                {
-                    if((!(*vi).IsD()) && (*vi).P().X()<(m.bbox.max.X()+m.bbox.min.X())/6)
-                    {
-                        for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+//                for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
+//                {
+//                    if((!(*vi).IsD()) && (*vi).P().X()</*(m.bbox.max.X()+m.bbox.min.X())/6*/0)
+//                    {
+//                        for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
+//                        {
+//                            vfi.V()->SetB();
+//                            vfi.V1()->SetB();
+//                            vfi.V2()->SetB();
+//                            vfi.f->SetB(0);
+//                            vfi.f->SetB(1);
+//                            vfi.f->SetB(2);
+//                            ++m.bn;
+//                        }
+//                    }
+
+                    MeshType::FaceIterator pf;
+                    for (pf=m.face.begin();pf!=m.face.end();++pf)
+                    {   bool isBoundry = false;
+                        for (int j=0; j<3; ++j)
                         {
-                            vfi.V()->SetB();
-                            vfi.V1()->SetB();
-                            vfi.V2()->SetB();
-                            vfi.f->SetB(0);
-                            vfi.f->SetB(1);
-                            vfi.f->SetB(2);
+                            if((*pf).V(j)->P().X()<0)
+                            {
+                                isBoundry=true;
+                            }
+                        }
+                        if(isBoundry)
+                        {
+                            (*pf).V(0)->SetB();
+                            (*pf).V(1)->SetB();
+                            (*pf).V(2)->SetB();
+                            (*pf).SetB(0);
+                            (*pf).SetB(1);
+                            (*pf).SetB(2);
+                            ++m.bn;
                         }
                     }
-                    VertexType::DeleteBitFlag(visitedBit);
-                }
+////                    VertexType::DeleteBitFlag(visitedBit);
+//                }
 
             }
         };
@@ -80,19 +103,6 @@ private:
         typedef MyTriEdgeCollapse MYTYPE;
         typedef typename TriEdgeCollapse< TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
         inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){}
-
-        static void CountBoundries(TriMeshType &m)
-        {
-            int count =0;
-            typename 	TriMeshType::FaceIterator  pf;
-            for(pf=m.face.begin();pf!=m.face.end();++pf)
-                if( !(*pf).IsD())
-                    if((*pf).IsB(0) && (*pf).IsB(1) && (*pf).IsB(2))
-                        count++;
-
-            m.bn = count;
-
-        }
 
         static void Init(TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
         {
@@ -106,7 +116,6 @@ private:
 
             vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
             ModFlag::PEW(m);
-            CountBoundries(m);
             //vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
 
             if(pp->PreserveBoundary)
@@ -255,7 +264,7 @@ static float borderCount;
                 }
             i++;
         }
-    };
+    }
 
     /*
          * Execute simplification
@@ -269,7 +278,8 @@ static float borderCount;
                    dup, unref);
         }
 
-        printf("reducing it to %i\n", FinalSize);
+
+
 
         vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
 
@@ -281,15 +291,32 @@ static float borderCount;
         int t2 = clock();
         printf("Initial Heap Size %i\n", int(DeciSession.h.size()));
 
+        if(qparams.PreserveBoundary)
+        {
+            int origTarget=FinalSize;
+            if(FinalSize<=mesh.bn)
+                FinalSize = FinalSize+mesh.bn;
+
+            printf("Target Faces:%d\n"
+                   "Initial Faces:%d\n"
+                   "Boundary Triangles:%d\n"
+                   "Adjusted target:%d\n",
+                   origTarget,mesh.fn,mesh.bn,FinalSize);
+        }
+
+        printf("reducing it to %i\n", FinalSize);
+
         DeciSession.SetTargetSimplices(FinalSize);
         DeciSession.SetTimeBudget(0.5f);
         if (TargetError < std::numeric_limits<float>::max())
             DeciSession.SetTargetMetric(TargetError);
 
+        printf("Initial MeshSize:%d ,Boundries:%d , ExpectedSize:%d",mesh.fn,mesh.bn,(FinalSize));
+
         printf("Mesh Size:%d, Borders:%d, Simplifiable faces:%d",mesh.fn, mesh.bn, (mesh.fn-mesh.bn));
-        while (DeciSession.DoOptimization() && (mesh.fn - mesh.bn) > FinalSize
+        while (DeciSession.DoOptimization() && mesh.fn>FinalSize
                && DeciSession.currMetric < TargetError)
-            printf("Current Mesh size %7i test %7i heap sz %9i err %9g \r", mesh.fn, (mesh.fn-mesh.bn-FinalSize) ,
+            printf("Current Mesh size %7i test %7i heap sz %9i err %9g \r", mesh.fn, (mesh.fn-mesh.bn) ,
                    int(DeciSession.h.size()), DeciSession.currMetric);
 
         if (CleaningFlag) {
@@ -300,15 +327,13 @@ static float borderCount;
         }
 
         int t3 = clock();
-        printf("mesh  vertices:%d faces:%d boundryFaces:%d Error %g \n", mesh.vn, mesh.fn,mesh.bn, DeciSession.currMetric);
+        printf("mesh  vertices:%d faces:%d NonBoundryFaces:%d Error %g \n", mesh.vn, mesh.fn,(mesh.fn-mesh.bn), DeciSession.currMetric);
         printf("\nCompleted in (%i+%i) msec\n", t2 - t1, t3 - t2);
 
-    };
-
-
+    }
 
     //Nothing here just yet :)
-    virtual ~QuadricDecimator(){};
+    virtual ~QuadricDecimator(){}
 };
 
 } /* namespace brndan022 */

@@ -35,6 +35,7 @@ int main(int argc, char**argv)
 
 
 	MyMesh Mesh;
+    Mesh.bn=0;
 	Simplifier<MyMesh> *s;
 
     if(atoi(argv[1])==0)
