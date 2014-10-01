@@ -36,6 +36,9 @@ int main(int argc, char**argv)
 
 	MyMesh Mesh;
     Mesh.bn=0;
+
+
+
 	Simplifier<MyMesh> *s;
 
     if(atoi(argv[1])==0)
@@ -44,6 +47,24 @@ int main(int argc, char**argv)
         s = new ClusteringDecimator<MyMesh>();
 
     readFile<MyMesh>(Mesh,argv[2]);
+
+    printf("xdim:%f: %f\n"
+           "ydim:%f: %f\n"
+           "zdim:%f: %f\n",
+           Mesh.bbox.min.X(),Mesh.bbox.max.X(),
+           Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
+           Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
+
+    Point3f min = Mesh.bbox.min;
+    Point3f max = Mesh.bbox.max;
+    min.X()+=100;
+    min.Y()+=100;
+    min.Z()+=100;
+    max.X()-=100;
+    max.Y()-=100;
+    max.Z()-=100;
+
+    Mesh.workingBBox = Box3f(min,max);
 
     s->setParameters(argc, argv);
     s->simplify(Mesh);

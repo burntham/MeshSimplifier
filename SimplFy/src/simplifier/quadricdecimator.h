@@ -74,7 +74,7 @@ private:
                     {   bool isBoundry = false;
                         for (int j=0; j<3; ++j)
                         {
-                            if((*pf).V(j)->P().X()<0)
+                            if(! m.workingBBox.IsIn((*pf).V(j)->P()))
                             {
                                 isBoundry=true;
                             }
@@ -277,9 +277,6 @@ static float borderCount;
             printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",
                    dup, unref);
         }
-
-
-
 
         vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
 
