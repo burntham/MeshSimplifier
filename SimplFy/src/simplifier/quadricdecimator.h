@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vcg/complex/algorithms/local_optimization.h>
 #include <vcg/complex/algorithms/local_optimization/tri_edge_collapse_quadric.h>
+#include<vcg/simplex/face/pos.h>
 
 #ifndef QUADRICDECIMATOR_H_
 #define QUADRICDECIMATOR_H_
@@ -77,12 +78,25 @@ private:
         typedef MyMesh::VertexType::EdgeType EdgeType;
         typedef MyMesh TriMeshType;
         typedef MyTriEdgeCollapse MYTYPE;
+        typedef typename TECQ::QParameter QParameter;
+        typedef typename TriMeshType::FaceType FaceType;
         typedef typename TriEdgeCollapse< TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
+
+
+
+
+//        typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
+        typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapElem HeapElem;
+
+
+
+
         inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){}
 
         static void Init(TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
         {
-            TriEdgeCollapseQuadric::QParameter *pp=(TriEdgeCollapseQuadric::QParameter *)_pp;
+
+            QParameter *pp=(QParameter *)_pp;
 
             typename 	TriMeshType::VertexIterator  vi;
             typename 	TriMeshType::FaceIterator  pf;
@@ -110,6 +124,7 @@ private:
             for(vi=m.vert.begin();vi!=m.vert.end();++vi)
                 if(!(*vi).IsD() && (*vi).IsRW())
                 {
+
                     vcg::face::VFIterator<FaceType> x;
                     for( x.F() = (*vi).VFp(), x.I() = (*vi).VFi(); x.F()!=0; ++ x){
                         x.V1()->ClearV();
@@ -200,7 +215,7 @@ public:
                         float minX, maxX, minY,maxY, minZ, maxZ;
                         if (i+6<argc){
                             try{
-                                minX=stof(argv[++i]),maxX=stof(argv[++i]),minY=stof(argv[++i]),maxY=stof(argv[++i]),minZ=stof(argv[++i]),maxZ=stof(argv[++i]);
+                                minX=std::stof(argv[++i]),maxX=stof(argv[++i]),minY=stof(argv[++i]),maxY=stof(argv[++i]),minZ=stof(argv[++i]),maxZ=stof(argv[++i]);
                             }
                             catch(...)
                             {
