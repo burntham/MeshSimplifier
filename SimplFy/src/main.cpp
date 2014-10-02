@@ -55,17 +55,6 @@ int main(int argc, char**argv)
            Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
            Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
 
-    Point3f min = Mesh.bbox.min;
-    Point3f max = Mesh.bbox.max;
-    min.X()+=5000;
-    min.Y()+=5000;
-    min.Z()+=100;
-    max.X()-=5000;
-    max.Y()-=5000;
-    max.Z()-=100;
-
-    Mesh.workingBBox = Box3f(min,max);
-
     s->setParameters(argc, argv);
     s->simplify(Mesh);
 

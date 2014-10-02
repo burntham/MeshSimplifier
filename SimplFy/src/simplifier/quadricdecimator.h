@@ -43,31 +43,12 @@ private:
         {
         public:
             typedef MyMesh MeshType;
-            static void PEW(MeshType &m)
+            static void UpdateCustomBoundaryTriangles(MeshType &m)
             {
 
                 RequirePerFaceFlags(m);
                 RequireVFAdjacency(m);
                 FaceClearB(m);
-
-//                int visitedBit=VertexType::NewBitFlag();
-
-                const int BORDERFLAG[3]={FaceType::BORDER0, FaceType::BORDER1, FaceType::BORDER2};
-//                for(VertexIterator vi=m.vert.begin();vi!=m.vert.end();++vi)
-//                {
-//                    if((!(*vi).IsD()) && (*vi).P().X()</*(m.bbox.max.X()+m.bbox.min.X())/6*/0)
-//                    {
-//                        for(face::VFIterator<FaceType> vfi(&*vi) ; !vfi.End(); ++vfi )
-//                        {
-//                            vfi.V()->SetB();
-//                            vfi.V1()->SetB();
-//                            vfi.V2()->SetB();
-//                            vfi.f->SetB(0);
-//                            vfi.f->SetB(1);
-//                            vfi.f->SetB(2);
-//                            ++m.bn;
-//                        }
-//                    }
 
                     MeshType::FaceIterator pf;
                     for (pf=m.face.begin();pf!=m.face.end();++pf)
@@ -90,8 +71,6 @@ private:
                             ++m.bn;
                         }
                     }
-////                    VertexType::DeleteBitFlag(visitedBit);
-//                }
 
             }
         };
@@ -106,7 +85,6 @@ private:
 
         static void Init(TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
         {
-            printf("here we go again!: %d\n", m.bbox.max.X());
             TriEdgeCollapseQuadric::QParameter *pp=(TriEdgeCollapseQuadric::QParameter *)_pp;
 
             typename 	TriMeshType::VertexIterator  vi;
@@ -115,8 +93,8 @@ private:
             pp->CosineThr=cos(pp->NormalThrRad);
 
             vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-            ModFlag::PEW(m);
-            //vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+            ModFlag::UpdateCustomBoundaryTriangles(m);
+
 
             if(pp->PreserveBoundary)
             {
@@ -158,6 +136,7 @@ private:
     };
 public:
 static float borderCount;
+Box3f WorkingBox;
     QuadricDecimator(){
         CleaningFlag = false;
         FinalSize=0;
@@ -222,7 +201,14 @@ static float borderCount;
                 case 'B':
                     if (argv[i][2] == 'y') {
                         qparams.PreserveBoundary = true;
-                        printf("Preserving Boundary\n");
+                        float minX=stof(argv[++i]),maxX=stof(argv[++i]),minY=stof(argv[++i]),maxY=stof(argv[++i]),minZ=stof(argv[++i]),maxZ=stof(argv[++i]);
+                        Point3f min(minX, minY, minZ);
+                        Point3f max(maxX,maxY,maxZ);
+                        WorkingBox = Box3f(min,max);
+                        printf("Preserving Boundary defined as all faces with atleast 1 vertex outside of:\n");
+                        printf("\tX from %f to %f \n",minX,maxX);
+                        printf("\tY from %f to %f \n",minY,maxY);
+                        printf("\tZ from %f to %f \n",minZ,maxZ);
                     } else {
                         qparams.PreserveBoundary = false;
                         printf("NOT Preserving Boundary\n");
@@ -279,7 +265,7 @@ static float borderCount;
         }
 
         vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
-
+        mesh.workingBBox = Box3f(WorkingBox);
         // decimator initialization (Simplifeier object)
         vcg::LocalOptimization<MyMesh> DeciSession(mesh, &qparams);
 
