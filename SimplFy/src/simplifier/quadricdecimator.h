@@ -21,9 +21,6 @@ using namespace tri;
 float TargetError =std::numeric_limits<float>::max();
 
 template <typename M> class QuadricDecimator : public Simplifier<M> {
-
-public:
-static float TEST;
 private:
     TriEdgeCollapseQuadricParameter qparams;
     bool CleaningFlag;
@@ -50,27 +47,27 @@ private:
                 RequireVFAdjacency(m);
                 FaceClearB(m);
 
-                    MeshType::FaceIterator pf;
-                    for (pf=m.face.begin();pf!=m.face.end();++pf)
-                    {   bool isBoundry = false;
-                        for (int j=0; j<3; ++j)
+                MeshType::FaceIterator pf;
+                for (pf=m.face.begin();pf!=m.face.end();++pf)
+                {   bool isBoundry = false;
+                    for (int j=0; j<3; ++j)
+                    {
+                        if(! m.workingBBox.IsIn((*pf).V(j)->P()))
                         {
-                            if(! m.workingBBox.IsIn((*pf).V(j)->P()))
-                            {
-                                isBoundry=true;
-                            }
-                        }
-                        if(isBoundry)
-                        {
-                            (*pf).V(0)->SetB();
-                            (*pf).V(1)->SetB();
-                            (*pf).V(2)->SetB();
-                            (*pf).SetB(0);
-                            (*pf).SetB(1);
-                            (*pf).SetB(2);
-                            ++m.bn;
+                            isBoundry=true;
                         }
                     }
+                    if(isBoundry)
+                    {
+                        (*pf).V(0)->SetB();
+                        (*pf).V(1)->SetB();
+                        (*pf).V(2)->SetB();
+                        (*pf).SetB(0);
+                        (*pf).SetB(1);
+                        (*pf).SetB(2);
+                        ++m.bn;
+                    }
+                }
 
             }
         };
@@ -135,13 +132,12 @@ private:
         }
     };
 public:
-static float borderCount;
-Box3f WorkingBox;
+    static float borderCount;
+    Box3f WorkingBox;
     QuadricDecimator(){
         CleaningFlag = false;
         FinalSize=0;
     }
-
 
     /*
          * Configure the parameters of the simplifier
@@ -201,7 +197,23 @@ Box3f WorkingBox;
                 case 'B':
                     if (argv[i][2] == 'y') {
                         qparams.PreserveBoundary = true;
-                        float minX=stof(argv[++i]),maxX=stof(argv[++i]),minY=stof(argv[++i]),maxY=stof(argv[++i]),minZ=stof(argv[++i]),maxZ=stof(argv[++i]);
+                        float minX, maxX, minY,maxY, minZ, maxZ;
+                        if (i+6<argc){
+                            try{
+                                minX=stof(argv[++i]),maxX=stof(argv[++i]),minY=stof(argv[++i]),maxY=stof(argv[++i]),minZ=stof(argv[++i]),maxZ=stof(argv[++i]);
+                            }
+                            catch(...)
+                            {
+                                cout<<"invalid arguments for boundary box\n -By <minX> <maxX> <minY> <maxY> <minZ> <maxZ>\n";
+                                break;
+                            }
+                        }else{
+                            cout<<"Boundary Preservation disabled\n";
+                            qparams.PreserveBoundary = false;
+                            break;
+                        }
+
+
                         Point3f min(minX, minY, minZ);
                         Point3f max(maxX,maxY,maxZ);
                         WorkingBox = Box3f(min,max);
@@ -209,6 +221,7 @@ Box3f WorkingBox;
                         printf("\tX from %f to %f \n",minX,maxX);
                         printf("\tY from %f to %f \n",minY,maxY);
                         printf("\tZ from %f to %f \n",minZ,maxZ);
+
                     } else {
                         qparams.PreserveBoundary = false;
                         printf("NOT Preserving Boundary\n");
@@ -250,6 +263,7 @@ Box3f WorkingBox;
                 }
             i++;
         }
+
     }
 
     /*

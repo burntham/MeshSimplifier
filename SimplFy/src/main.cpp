@@ -48,9 +48,10 @@ int main(int argc, char**argv)
 
     readFile<MyMesh>(Mesh,argv[2]);
 
-    printf("xdim:%f: %f\n"
-           "ydim:%f: %f\n"
-           "zdim:%f: %f\n",
+    printf("Mesh Axis aligned Dimensions:\n"
+           "\txdim:%f: %f\n"
+           "\tydim:%f: %f\n"
+           "\tzdim:%f: %f\n",
            Mesh.bbox.min.X(),Mesh.bbox.max.X(),
            Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
            Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
