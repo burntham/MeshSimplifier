@@ -25,28 +25,32 @@ template <typename M> class QuadricDecimator : public Simplifier<M> {
 private:
     TriEdgeCollapseQuadricParameter qparams;
     bool CleaningFlag;
+    bool defaultBoundaries;
     int FinalSize;
     Box3<float> t;
-
-
 
     /*
          * Define class for simplifier object
          */
     class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric<MyMesh,
-            VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex> > {
+            VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex> >
+    {
 
     public:
+        /**
+         * @brief The ModFlag class
+         * This class is to modify the default behavior of the update border flag
+         */
         class ModFlag: public UpdateFlags<MyMesh>
         {
         public:
             typedef MyMesh MeshType;
+
             static void UpdateCustomBoundaryTriangles(MeshType &m)
             {
 
                 RequirePerFaceFlags(m);
                 RequireVFAdjacency(m);
-                FaceClearB(m);
 
                 MeshType::FaceIterator pf;
                 for (pf=m.face.begin();pf!=m.face.end();++pf)
@@ -66,32 +70,35 @@ private:
                         (*pf).SetB(0);
                         (*pf).SetB(1);
                         (*pf).SetB(2);
-                        ++m.bn;
                     }
                 }
 
             }
+            static void UpdateBoundaryCount(MeshType &m)
+            {
+                RequirePerFaceFlags(m);
+                RequireVFAdjacency(m);
+
+                MeshType::FaceIterator pf;
+                for (pf=m.face.begin();pf!=m.face.end();++pf)
+                {
+                    if ((*pf).IsB(0) || (*pf).IsB(1) || (*pf).IsB(2) )
+                    { ++m.bn;}
+                }
+            }
         };
 
-        typedef vcg::tri::TriEdgeCollapseQuadric<MyMesh, VertexPair,
-        MyTriEdgeCollapse, QInfoStandard<MyVertex> > TECQ;
+        typedef vcg::tri::TriEdgeCollapseQuadric<MyMesh, VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex> > TECQ;
         typedef MyMesh::VertexType::EdgeType EdgeType;
         typedef MyMesh TriMeshType;
         typedef MyTriEdgeCollapse MYTYPE;
         typedef typename TECQ::QParameter QParameter;
         typedef typename TriMeshType::FaceType FaceType;
         typedef typename TriEdgeCollapse< TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
-
-
-
-
-//        typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
         typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapElem HeapElem;
 
 
-
-
-        inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){}
+        inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){ }
 
         static void Init(TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
         {
@@ -104,7 +111,21 @@ private:
             pp->CosineThr=cos(pp->NormalThrRad);
 
             vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
-            ModFlag::UpdateCustomBoundaryTriangles(m);
+            if (pp->PreserveBoundary&&pp->FastPreserveBoundary)
+            {
+                vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+                ModFlag::UpdateCustomBoundaryTriangles(m);
+            } else if(pp->PreserveBoundary)
+            {
+                vcg::tri::UpdateFlags<TriMeshType>::FaceClearB(m);
+                ModFlag::UpdateCustomBoundaryTriangles(m);
+            }
+            else
+            {
+                vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
+            }
+
+            ModFlag::UpdateBoundaryCount(m);
 
 
             if(pp->PreserveBoundary)
@@ -145,7 +166,21 @@ private:
                 }
 
         }
+
+        // Final Clean up after the end of the simplification process
+        static void Finalize(TriMeshType &m, HeapType& /*h_ret*/, BaseParameterClass *_pp)
+        {
+          QParameter *pp=(QParameter *)_pp;
+
+          if(pp->PreserveBoundary)
+          {
+            typename 	std::vector<typename TriMeshType::VertexPointer>::iterator wvi;
+            for(wvi=WV().begin();wvi!=WV().end();++wvi)
+              if(!(*wvi)->IsD()) (*wvi)->SetW();
+          }
+        }
     };
+
 public:
     static float borderCount;
     Box3f WorkingBox;
@@ -153,6 +188,8 @@ public:
         CleaningFlag = false;
         FinalSize=0;
     }
+
+    //     static float HeapSimplexRatio(BaseParameterClass *_pp) {return 2.3f;}
 
     /*
          * Configure the parameters of the simplifier
@@ -211,6 +248,11 @@ public:
                     break;
                 case 'B':
                     if (argv[i][2] == 'y') {
+                        if (argv[i][3]=='d')
+                        {
+                            qparams.FastPreserveBoundary=true;
+                            printf("Default boundary preservation also enabled\n");
+                        }
                         qparams.PreserveBoundary = true;
                         float minX, maxX, minY,maxY, minZ, maxZ;
                         if (i+6<argc){
@@ -223,12 +265,10 @@ public:
                                 break;
                             }
                         }else{
-                            cout<<"Boundary Preservation disabled\n";
+                            cout<<"Custom Boundary Preservation disabled\n";
                             qparams.PreserveBoundary = false;
                             break;
                         }
-
-
                         Point3f min(minX, minY, minZ);
                         Point3f max(maxX,maxY,maxZ);
                         WorkingBox = Box3f(min,max);
@@ -264,8 +304,8 @@ public:
                     printf("Setting Boundary Weight to %f\n", atof(argv[i] + 2));
                     break;
                 case 'e':
-                    TargetError = float(atof(argv[i] + 2));
-                    printf("Setting TargetError to %g\n", atof(argv[i] + 2));
+                    TargetError = float(stof(argv[++i])); // Fixed the Target error option
+                    printf("Setting TargetError to %g\n", TargetError);
                     break;
                 case 'P':
                     CleaningFlag = true;
@@ -299,6 +339,7 @@ public:
         vcg::LocalOptimization<MyMesh> DeciSession(mesh, &qparams);
 
         int t1 = clock();
+        //MyTriEdgeCollapse::defBound = true;
         DeciSession.Init<MyTriEdgeCollapse>();
         int t2 = clock();
         printf("Initial Heap Size %i\n", int(DeciSession.h.size()));
