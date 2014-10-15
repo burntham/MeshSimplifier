@@ -62,24 +62,24 @@ private:
                 MeshType::FaceIterator pf;
                 for (pf=m.face.begin();pf!=m.face.end();++pf)
                 {   bool isBoundry = false;
-                    for (int j=0; j<3; ++j)
-                    {
-                        if(! m.workingBBox.IsIn((*pf).V(j)->P()))
-                        {
-                            isBoundry=true;
-                        }
-                    }
-                    if(isBoundry)
-                    {
-                        (*pf).V(0)->SetB();
-                        (*pf).V(1)->SetB();
-                        (*pf).V(2)->SetB();
-                        (*pf).SetB(0);
-                        (*pf).SetB(1);
-                        (*pf).SetB(2);
-                    }
-                }
 
+                       for (int j=0; j<3; ++j)
+                       {
+                           if(! m.workingBBox.IsIn((*pf).V(j)->P()))
+                           {
+                               isBoundry=true;
+                           }
+                       }
+                       if(isBoundry)
+                       {
+                           (*pf).V(0)->SetB();
+                           (*pf).V(1)->SetB();
+                           (*pf).V(2)->SetB();
+                           (*pf).SetB(0);
+                           (*pf).SetB(1);
+                           (*pf).SetB(2);
+                       }
+                }
             }
 
             /**
@@ -140,10 +140,12 @@ private:
             pp->CosineThr=cos(pp->NormalThrRad);
 
             vcg::tri::UpdateTopology<TriMeshType>::VertexFace(m);
+
             if (pp->PreserveBoundary&&pp->FastPreserveBoundary)
             {
                 vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
                 ModFlag::UpdateCustomBoundaryTriangles(m);
+
             } else if(pp->PreserveBoundary)
             {
                 vcg::tri::UpdateFlags<TriMeshType>::FaceClearB(m);
@@ -205,14 +207,14 @@ private:
          */
         static void Finalize(TriMeshType &m, HeapType& /*h_ret*/, BaseParameterClass *_pp)
         {
-          QParameter *pp=(QParameter *)_pp;
+            QParameter *pp=(QParameter *)_pp;
 
-          if(pp->PreserveBoundary)
-          {
-            typename 	std::vector<typename TriMeshType::VertexPointer>::iterator wvi;
-            for(wvi=WV().begin();wvi!=WV().end();++wvi)
-              if(!(*wvi)->IsD()) (*wvi)->SetW();
-          }
+            if(pp->PreserveBoundary)
+            {
+                typename 	std::vector<typename TriMeshType::VertexPointer>::iterator wvi;
+                for(wvi=WV().begin();wvi!=WV().end();++wvi)
+                    if(!(*wvi)->IsD()) (*wvi)->SetW();
+            }
         }
     };
 
@@ -273,6 +275,8 @@ public:
                     }
                     break;
                 case 'B':
+                {
+                    int bPos = i;
                     if (argv[i][2] == 'y') {
 
                         qparams.PreserveBoundary = true;
@@ -304,12 +308,15 @@ public:
                         printf("NOT Preserving Custom Boundary\n");
                     }
 
-                    if (argv[i][3]=='d')
+                    if (argv[bPos][3] == 'd')
                     {
                         qparams.FastPreserveBoundary=true;
                         printf("Default boundary preservation enabled\n");
                     }
+
                     break;
+                }
+
                 case 'T':
                     if (argv[i][2] == 'y') {
                         qparams.PreserveTopology = true;
@@ -346,7 +353,7 @@ public:
                 }
             i++;
         }
-    printf("\n");
+        printf("\n");
     }
 
     /*
