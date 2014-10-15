@@ -29,9 +29,10 @@ private:
     int FinalSize;
     Box3<float> t;
 
-    /*
-         * Define class for simplifier object
-         */
+    /**
+     * @brief The MyTriEdgeCollapse class
+     * This class is where most of the customizations are implemented
+     */
     class MyTriEdgeCollapse: public vcg::tri::TriEdgeCollapseQuadric<MyMesh,
             VertexPair, MyTriEdgeCollapse, QInfoStandard<MyVertex> >
     {
@@ -40,12 +41,18 @@ private:
         /**
          * @brief The ModFlag class
          * This class is to modify the default behavior of the update border flag
+         * It also allows borders to be indentified
          */
         class ModFlag: public UpdateFlags<MyMesh>
         {
         public:
             typedef MyMesh MeshType;
 
+            /**
+             * @brief UpdateCustomBoundaryTriangles Identifies boundary triangles outside of a specified bounding box.
+             * (Used to prevent seams from splitting,simplifying and stitching).
+             * @param m
+             */
             static void UpdateCustomBoundaryTriangles(MeshType &m)
             {
 
@@ -74,6 +81,11 @@ private:
                 }
 
             }
+
+            /**
+             * @brief UpdateBoundaryCount Counts the number of identified boundary triangles, updating the boundary count in the mesh.
+             * @param m - a reference to the mesh
+             */
             static void UpdateBoundaryCount(MeshType &m)
             {
                 RequirePerFaceFlags(m);
@@ -97,12 +109,29 @@ private:
         typedef typename TriEdgeCollapse< TriMeshType, VertexPair, MYTYPE>::HeapType HeapType;
         typedef typename TriEdgeCollapse<TriMeshType, VertexPair, MYTYPE>::HeapElem HeapElem;
 
-
+        /*
+         * Custom edge collapse Constructor
+         * */
         inline MyTriEdgeCollapse( const VertexPair &p, int i, BaseParameterClass *q) :TECQ(p, i, q){ }
 
+        /**
+         * @brief HeapSimplexRatio
+         * Overides the heapSimplexRatio function in the vcglib implementation
+         * This allows for a reduced memory cap (increased computation time though) as additional elements in the heap are removed.
+         * If the heap is > heapRatio*meshsize then remove deleted elements from heap.
+         * @return
+         */
+        static float HeapSimplexRatio(BaseParameterClass *_pp) {return 2.8f;}
+
+
+        /**
+         * @brief Init is method which overrides the default in QuadricDecimator -> note, vcglib requires this methods' signiature to remain the same.
+         * @param m
+         * @param h_ret
+         * @param _pp
+         */
         static void Init(TriMeshType &m, HeapType &h_ret, BaseParameterClass *_pp)
         {
-
             QParameter *pp=(QParameter *)_pp;
 
             typename 	TriMeshType::VertexIterator  vi;
@@ -125,10 +154,10 @@ private:
                 vcg::tri::UpdateFlags<TriMeshType>::FaceBorderFromVF(m);
             }
 
+            //Update the count of the boundar triangles (count is stored in the mesh object).
             ModFlag::UpdateBoundaryCount(m);
 
-
-            if(pp->PreserveBoundary)
+            if(pp->PreserveBoundary||pp->FastPreserveBoundary)
             {
                 WV().clear();
                 for(pf=m.face.begin();pf!=m.face.end();++pf)
@@ -167,7 +196,13 @@ private:
 
         }
 
-        // Final Clean up after the end of the simplification process
+        /**
+         * @brief Finalize is another overidden method, This has been overridden to prevent
+         * operations happening when the fast-preserve boundary is flag is true. Since this flag has been repurposed(to retain default boundary preservation).
+         *
+         * @param m
+         * @param _pp
+         */
         static void Finalize(TriMeshType &m, HeapType& /*h_ret*/, BaseParameterClass *_pp)
         {
           QParameter *pp=(QParameter *)_pp;
@@ -182,14 +217,8 @@ private:
     };
 
 public:
-    static float borderCount;
     Box3f WorkingBox;
-    QuadricDecimator(){
-        CleaningFlag = false;
-        FinalSize=0;
-    }
-
-    //     static float HeapSimplexRatio(BaseParameterClass *_pp) {return 2.3f;}
+    QuadricDecimator(): FinalSize(0),CleaningFlag(false){}
 
     /*
          * Configure the parameters of the simplifier
@@ -197,11 +226,8 @@ public:
     virtual void setParameters(int argc, char ** argv) override
     {
         FinalSize=atoi(argv[4]);
-
-        std::cout<<"Quadric configuring"<<std::endl;
         qparams.QualityThr = .3;
         TargetError = std::numeric_limits<float>::max();
-        CleaningFlag = false;
         // parse command line.
         for (int i = 4; i < argc;) {
             if (argv[i][0] == '-')
@@ -248,11 +274,7 @@ public:
                     break;
                 case 'B':
                     if (argv[i][2] == 'y') {
-                        if (argv[i][3]=='d')
-                        {
-                            qparams.FastPreserveBoundary=true;
-                            printf("Default boundary preservation also enabled\n");
-                        }
+
                         qparams.PreserveBoundary = true;
                         float minX, maxX, minY,maxY, minZ, maxZ;
                         if (i+6<argc){
@@ -272,14 +294,20 @@ public:
                         Point3f min(minX, minY, minZ);
                         Point3f max(maxX,maxY,maxZ);
                         WorkingBox = Box3f(min,max);
-                        printf("Preserving Boundary defined as all faces with atleast 1 vertex outside of:\n");
+                        printf("Classifying all faces as boundary faces if atleast 1 vertex outside of:\n");
                         printf("\tX from %f to %f \n",minX,maxX);
                         printf("\tY from %f to %f \n",minY,maxY);
                         printf("\tZ from %f to %f \n",minZ,maxZ);
 
                     } else {
                         qparams.PreserveBoundary = false;
-                        printf("NOT Preserving Boundary\n");
+                        printf("NOT Preserving Custom Boundary\n");
+                    }
+
+                    if (argv[i][3]=='d')
+                    {
+                        qparams.FastPreserveBoundary=true;
+                        printf("Default boundary preservation enabled\n");
                     }
                     break;
                 case 'T':
@@ -309,7 +337,7 @@ public:
                     break;
                 case 'P':
                     CleaningFlag = true;
-                    printf("Cleaning mesh before simplification\n");
+                    printf("Mesh Cleaning enabled\n");
                     break;
 
                 default:
@@ -318,7 +346,7 @@ public:
                 }
             i++;
         }
-
+    printf("\n");
     }
 
     /*
@@ -326,66 +354,92 @@ public:
          */
     virtual void simplify(M &mesh) override
     {
+        /*
+         * Removed duplicate and unreferenced faces before the mesh is processed.
+         * */
         if (CleaningFlag) {
             int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
             int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
-            printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",
+            printf("Performing pre simplification clean\n"
+                   "Removed %i duplicate and %i unreferenced vertices from mesh \n\n",
                    dup, unref);
         }
 
         vcg::tri::UpdateBounding<MyMesh>::Box(mesh);
+
+
+        /*
+         * Set a Custom bounding box used to identify boundry triangles
+         * */
         mesh.workingBBox = Box3f(WorkingBox);
-        // decimator initialization (Simplifeier object)
+
         vcg::LocalOptimization<MyMesh> DeciSession(mesh, &qparams);
 
+
         int t1 = clock();
-        //MyTriEdgeCollapse::defBound = true;
         DeciSession.Init<MyTriEdgeCollapse>();
         int t2 = clock();
-        printf("Initial Heap Size %i\n", int(DeciSession.h.size()));
 
-        if(qparams.PreserveBoundary)
+        /*
+         *Modify the target face# if preserve boundary is enabled and taget is below boundary face#
+         * */
+        int origTarget=FinalSize;
+        if(qparams.PreserveBoundary || qparams.FastPreserveBoundary)
         {
-            int origTarget=FinalSize;
-            if(FinalSize<=mesh.bn)
-                FinalSize = FinalSize+mesh.bn;
 
-            printf("Target Faces:%d\n"
-                   "Initial Faces:%d\n"
-                   "Boundary Triangles:%d\n"
-                   "Adjusted target:%d\n",
-                   origTarget,mesh.fn,mesh.bn,FinalSize);
+            if(FinalSize<=mesh.bn)
+            {
+                FinalSize = FinalSize+mesh.bn;
+                printf("Boundary face# > target face#.\n"
+                       "Target face# adjusted as boundary face# + target face#\n");
+            }
         }
 
-        printf("reducing it to %i\n", FinalSize);
+        printf("\tInitial Face#: %d\n"
+               "\tBoundary Face#: %d\n"
+               "\tOriginal Target#:%d\n"
+               "\tAdjusted Target#: %d\n",
+               mesh.fn, mesh.bn,origTarget,FinalSize);
+
+        printf("\n");
+
+        printf("Initial Heap Size %i\n", int(DeciSession.h.size()));
 
         DeciSession.SetTargetSimplices(FinalSize);
         DeciSession.SetTimeBudget(0.5f);
+
         if (TargetError < std::numeric_limits<float>::max())
             DeciSession.SetTargetMetric(TargetError);
 
-        printf("Initial MeshSize:%d ,Boundries:%d , ExpectedSize:%d",mesh.fn,mesh.bn,(FinalSize));
-
-        printf("Mesh Size:%d, Borders:%d, Simplifiable faces:%d",mesh.fn, mesh.bn, (mesh.fn-mesh.bn));
         while (DeciSession.DoOptimization() && mesh.fn>FinalSize
                && DeciSession.currMetric < TargetError)
-            printf("Current Mesh size %7i test %7i heap sz %9i err %9g \r", mesh.fn, (mesh.fn-mesh.bn) ,
-                   int(DeciSession.h.size()), DeciSession.currMetric);
+            printf("Current Mesh size %7i heap sz %9i err %9g \r", mesh.fn,int(DeciSession.h.size()), DeciSession.currMetric);
+
+        printf("\n");
 
         if (CleaningFlag) {
             int dup = tri::Clean<MyMesh>::RemoveDuplicateVertex(mesh);
             int unref = tri::Clean<MyMesh>::RemoveUnreferencedVertex(mesh);
-            printf("Removed %i duplicate and %i unreferenced vertices from mesh \n",
+            printf("Performing post simplification clean\n"
+                   "Removed %i duplicate and %i unreferenced vertices from mesh \n\n",
                    dup, unref);
         }
 
         int t3 = clock();
-        printf("mesh  vertices:%d faces:%d NonBoundryFaces:%d Error %g \n", mesh.vn, mesh.fn,(mesh.fn-mesh.bn), DeciSession.currMetric);
-        printf("\nCompleted in (%i+%i) msec\n", t2 - t1, t3 - t2);
+        printf("Final stats:\n"
+               "\tvertices:%d\n"
+               "\tfaces:%d\n"
+               "\tBoundary faces:%d\n"
+               "\tNon-Boundry Faces:%d\n"
+               "\tMesh has %d more faces then initial target:%d\n"
+               "\tError:%g \n", mesh.vn, mesh.fn,mesh.bn,(mesh.fn-mesh.bn), \
+               (mesh.fn-origTarget),origTarget, DeciSession.currMetric);
+
+        printf("\nCompleted in (%i+%i) msec\n\n", t2 - t1, t3 - t2);
 
     }
 
-    //Nothing here just yet :)
+
     virtual ~QuadricDecimator(){}
 };
 

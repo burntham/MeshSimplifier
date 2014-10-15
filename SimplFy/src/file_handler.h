@@ -18,26 +18,27 @@ int mask=0;
 
 	template <typename MeshType> int readFile(MeshType &m, char * filePath)
 	{
-		printf("Attempted to read Mesh%s: \n ",filePath);
+        printf("Reading mesh at: %s \n",filePath);
 
         int err=vcg::tri::io::Importer<MeshType>::Open(m,filePath,mask);
-
-        printf("mesh loaded with %d vertices and %d faces \n",m.vn,m.fn);
 
 		if (err)
 		{
 			printf("Unable to open mesh at %s\n", filePath);
 			exit(-1);
 		}else
-			printf("%s Was read successfully\n", filePath);
+        {
+            printf("mesh loaded with %d vertices and %d faces \n\n",m.vn,m.fn);
+        }
 
 		return 0;
 	}
 
 	template <typename MeshType> int writeMesh(MeshType &m, char * outfilePath)
-	{
-		printf("Writing simplified mesh to %s\n", outfilePath);
+    {
+        printf("Saving Mesh\n");
         vcg::tri::io::ExporterPLY<MeshType>::Save(m,outfilePath,mask);
+        printf("Simplfied mesh saved to: %s\n", outfilePath);
 		return 0;
 	}
 }

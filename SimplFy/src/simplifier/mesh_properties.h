@@ -43,8 +43,10 @@ namespace brndan022
 		//my mesh class:
         class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {
         public:
-            int bn;
-            BoxType workingBBox;
+            int bn;//Face count;
+            BoxType workingBBox;//specifies a volume of working triangles
+
+            MyMesh():bn(0){}
         };
 }
 #endif

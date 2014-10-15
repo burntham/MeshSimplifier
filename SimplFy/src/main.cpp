@@ -35,9 +35,6 @@ int main(int argc, char**argv)
 
 
 	MyMesh Mesh;
-    Mesh.bn=0;
-
-
 
 	Simplifier<MyMesh> *s;
 
@@ -48,13 +45,15 @@ int main(int argc, char**argv)
 
     readFile<MyMesh>(Mesh,argv[2]);
 
-    printf("Mesh Axis aligned Dimensions:\n"
-           "\txdim:%f: %f\n"
-           "\tydim:%f: %f\n"
-           "\tzdim:%f: %f\n",
-           Mesh.bbox.min.X(),Mesh.bbox.max.X(),
-           Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
-           Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
+
+// Used in debugging :D
+//    printf("Mesh Bounding box Dimensions:\n"
+//           "\txdim:%f: %f\n"
+//           "\tydim:%f: %f\n"
+//           "\tzdim:%f: %f\n",
+//           Mesh.bbox.min.X(),Mesh.bbox.max.X(),
+//           Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
+//           Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
 
     s->setParameters(argc, argv);
     s->simplify(Mesh);
