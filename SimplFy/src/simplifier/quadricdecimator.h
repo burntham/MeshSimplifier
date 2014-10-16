@@ -222,9 +222,11 @@ public:
     Box3f WorkingBox;
     QuadricDecimator(): FinalSize(0),CleaningFlag(false){}
 
-    /*
-         * Configure the parameters of the simplifier
-         */
+    /**
+     * @brief setParameters This method is called to configure the parameters of the simplifier.
+     * @param argc
+     * @param argv
+     */
     virtual void setParameters(int argc, char ** argv) override
     {
         FinalSize=atoi(argv[4]);
@@ -356,9 +358,10 @@ public:
         printf("\n");
     }
 
-    /*
-         * Execute simplification
-         */
+    /**
+     * @brief simplify Executes the simplification algorithm on the mesh
+     * @param mesh
+     */
     virtual void simplify(M &mesh) override
     {
         /*
