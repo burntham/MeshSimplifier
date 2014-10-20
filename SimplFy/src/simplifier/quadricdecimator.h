@@ -63,22 +63,22 @@ private:
                 for (pf=m.face.begin();pf!=m.face.end();++pf)
                 {   bool isBoundry = false;
 
-                       for (int j=0; j<3; ++j)
-                       {
-                           if(! m.workingBBox.IsIn((*pf).V(j)->P()))
-                           {
-                               isBoundry=true;
-                           }
-                       }
-                       if(isBoundry)
-                       {
-                           (*pf).V(0)->SetB();
-                           (*pf).V(1)->SetB();
-                           (*pf).V(2)->SetB();
-                           (*pf).SetB(0);
-                           (*pf).SetB(1);
-                           (*pf).SetB(2);
-                       }
+                    for (int j=0; j<3; ++j)
+                    {
+                        if(! m.workingBBox.IsIn((*pf).V(j)->P()))
+                        {
+                            isBoundry=true;
+                        }
+                    }
+                    if(isBoundry)
+                    {
+                        (*pf).V(0)->SetB();
+                        (*pf).V(1)->SetB();
+                        (*pf).V(2)->SetB();
+                        (*pf).SetB(0);
+                        (*pf).SetB(1);
+                        (*pf).SetB(2);
+                    }
                 }
             }
 

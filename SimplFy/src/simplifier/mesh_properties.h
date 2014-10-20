@@ -5,48 +5,48 @@
 
 #ifndef MESH_PROPERTIES_H_
 #define MESH_PROPERTIES_H_
-
-
 namespace brndan022
 {
-		class MyVertex;
-		class MyEdge;
-		class MyFace;
+class MyVertex;
+class MyEdge;
+class MyFace;
 
-		class MyUsedTypes : public vcg::UsedTypes<vcg::Use<MyVertex>::AsVertexType, vcg::Use<MyEdge>::AsEdgeType, vcg::Use<MyFace>::AsFaceType>{};
+class MyUsedTypes : public vcg::UsedTypes<vcg::Use<MyVertex>::AsVertexType,
+        vcg::Use<MyEdge>::AsEdgeType,
+        vcg::Use<MyFace>::AsFaceType>{};
 
-		class MyVertex : public vcg::Vertex < MyUsedTypes ,
-			vcg::vertex::VFAdj,
-			vcg::vertex::Coord3f,
-            vcg::vertex::Normal3f,
-			vcg::vertex::Mark,
-            vcg::vertex::BitFlags,
-            vcg::vertex::Color4b >
-		{
-			public:
-				vcg::math::Quadric<double> & Qd() {return q;}
-			private:
-				vcg::math::Quadric<double> q;
-		};
+class MyVertex : public vcg::Vertex < MyUsedTypes ,
+        vcg::vertex::VFAdj,
+        vcg::vertex::Coord3f,
+        vcg::vertex::Normal3f,
+        vcg::vertex::Mark,
+        vcg::vertex::BitFlags,
+        vcg::vertex::Color4b >
+{
+public:
+    vcg::math::Quadric<double> & Qd() {return q;}
+private:
+    vcg::math::Quadric<double> q;
+};
 
-		class MyEdge : public vcg::Edge< MyUsedTypes> {};
+class MyEdge : public vcg::Edge< MyUsedTypes> {};
 
-		typedef vcg::tri::BasicVertexPair<MyVertex> VertexPair;
+typedef vcg::tri::BasicVertexPair<MyVertex> VertexPair;
 
-		class MyFace : public vcg::Face<MyUsedTypes,
-			vcg::face::VFAdj,
-			vcg::face::VertexRef,
-            vcg::face::Normal3f,
-            vcg::face::BitFlags,
-            vcg::face::Color4b >{};
+class MyFace : public vcg::Face<MyUsedTypes,
+        vcg::face::VFAdj,
+        vcg::face::VertexRef,
+        vcg::face::Normal3f,
+        vcg::face::BitFlags,
+        vcg::face::Color4b >{};
 
-		//my mesh class:
-        class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {
-        public:
-            int bn;//Face count;
-            BoxType workingBBox;//specifies a volume of working triangles
+//my mesh class:
+class MyMesh : public vcg::tri::TriMesh<std::vector<MyVertex>, std::vector<MyFace> > {
+public:
+    int bn;//Border Face count;
+    BoxType workingBBox;//specifies a volume of working triangles
 
-            MyMesh():bn(0){}
-        };
+    MyMesh():bn(0){}
+};
 }
 #endif

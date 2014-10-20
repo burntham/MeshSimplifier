@@ -25,18 +25,18 @@ int main(int argc, char**argv)
     if(argc<4)
     {
         printf("Invalid arguments have been entered\n"
-                "Usage: simplify [method] filein.ply fileout.ply [opt/s]\n"
-                "[method] can be 0 or 1\n "
-                    "\t-0 for Quadric edge colapse \n"
-                    "\t-1 for Clustering\n "
+               "Usage: simplify [method] filein.ply fileout.ply [opt/s]\n"
+               "[method] can be 0 or 1\n "
+               "\t-0 for Quadric edge colapse \n"
+               "\t-1 for Clustering\n "
                );
         exit(-1);
     }
 
 
-	MyMesh Mesh;
+    MyMesh Mesh;
 
-	Simplifier<MyMesh> *s;
+    Simplifier<MyMesh> *s;
 
     if(atoi(argv[1])==0)
         s=new QuadricDecimator<MyMesh>();
@@ -46,20 +46,20 @@ int main(int argc, char**argv)
     readFile<MyMesh>(Mesh,argv[2]);
 
 
-// Used in debugging :D
-//    printf("Mesh Bounding box Dimensions:\n"
-//           "\txdim:%f: %f\n"
-//           "\tydim:%f: %f\n"
-//           "\tzdim:%f: %f\n",
-//           Mesh.bbox.min.X(),Mesh.bbox.max.X(),
-//           Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
-//           Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
+    // Used in debugging :D
+    //    printf("Mesh Bounding box Dimensions:\n"
+    //           "\txdim:%f: %f\n"
+    //           "\tydim:%f: %f\n"
+    //           "\tzdim:%f: %f\n",
+    //           Mesh.bbox.min.X(),Mesh.bbox.max.X(),
+    //           Mesh.bbox.min.Y(),Mesh.bbox.max.Y(),
+    //           Mesh.bbox.min.Z(),Mesh.bbox.max.Z());
 
     s->setParameters(argc, argv);
     s->simplify(Mesh);
 
     writeMesh(Mesh,argv[3]);
 
-	printf("Successful run!");
-	return 0;
+    printf("Successful run!");
+    return 0;
 }

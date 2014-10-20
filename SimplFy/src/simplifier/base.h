@@ -15,9 +15,9 @@ namespace brndan022 {
 
 template <typename M> class Simplifier {
 public:
-	virtual void simplify(M&) =0;
-	virtual void setParameters(int,char **) =0;
-	virtual ~Simplifier(){};
+    virtual void simplify(M&) =0;
+    virtual void setParameters(int,char **) =0;
+    virtual ~Simplifier(){}
 };
 
 } /* namespace brndan022 */
